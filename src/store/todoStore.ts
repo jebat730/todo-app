@@ -1,4 +1,5 @@
 import { create } from "zustand";
+
 type TodoItem = {
   id: number;
   activity: string;
@@ -8,6 +9,14 @@ type TodoItem = {
   accessibility: number;
 };
 
+const loadTodos = (): TodoItem[] => {
+  if (typeof window !== "undefined") {
+    const storedTodos = localStorage.getItem("todos");
+    return storedTodos ? JSON.parse(storedTodos) : [];
+  }
+  return [];
+};
+
 type TodoStore = {
   items: TodoItem[];
   addItem: (item: TodoItem) => void;
@@ -15,15 +24,19 @@ type TodoStore = {
 };
 
 export const useTodoStore = create<TodoStore>((set) => ({
-  items: [],
+  items: loadTodos(),
 
   addItem: (item) =>
-    set((state) => ({
-      items: [...state.items, item],
-    })),
+    set((state) => {
+      const updatedItems = [...state.items, item];
+      localStorage.setItem("todos", JSON.stringify(updatedItems));
+      return { items: updatedItems };
+    }),
 
   removeItem: (id) =>
-    set((state) => ({
-      items: state.items.filter((item) => item.id !== id),
-    })),
+    set((state) => {
+      const updatedItems = state.items.filter((item) => item.id !== id);
+      localStorage.setItem("todos", JSON.stringify(updatedItems));
+      return { items: updatedItems };
+    }),
 }));
